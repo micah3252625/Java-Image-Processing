@@ -81,8 +81,9 @@ public class Main {
         }
         return grayImg; // return grayscale image
     }
-    public static void Edges(int kernel[][], String filename) {
+    public static void Edges(int [][]kernel, String filename) {
 
+        // read or load image
         // read or load image
         BufferedImage img = null;
 
