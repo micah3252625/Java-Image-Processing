@@ -7,32 +7,12 @@ import java.io.IOException;
 
 
 public class Main {
-    // Kernels of different kind of operators
-    public static final int[][] SobelHoriKernel = {
-            { -1, 0, 1 },
-            { -2, 0, 2 },
-            { -1, 0, 1 }
+    public static final int[][] filter = {
+            { 1, 1, 1 },
+            { 1, 1, 1 },
+            { 1, 1, 1 }
     };
-    public static final int[][] SobelVertKernel = {
-            { -1, -2, -1 },
-            {  0,  0,  0 },
-            {  1,  2,  1 }
-    };
-    public static final int[][] LaplacianKernel = {
-            { 0,  1,  0 },
-            { 1, -4,  1 },
-            { 0,  1,  0 }
-    };
-    public static final int[][] PrewittVertKernel = {
-            { -1, -1, -1 },
-            {  1,  1,  1 },
-            {  0,  0,  0 }
-    };
-    public static final int[][] PrewittHoriKernel = {
-            { -1, 0, 1 },
-            { -1, 0, 1 },
-            { -1, 0, 1 },
-    };
+
     public static File newFile(String filename) {
         return (new File(filename));
     }
@@ -62,6 +42,15 @@ public class Main {
             value = 255;
         return value;
     }
+    public static int getSum(int[][] filter) {
+        int sum = 0;
+        for (int y = 0; y < filter.length; y++) {
+            for (int x = 0; x < filter[y].length; x++) {
+                sum += filter[y][x];
+            }
+        }
+        return sum;
+    }
     public static BufferedImage getGrayScaleImg(BufferedImage img) { // method that gets that process the grayscale image
 
         // initialize new Buffered Image
@@ -81,9 +70,8 @@ public class Main {
         }
         return grayImg; // return grayscale image
     }
-    public static void Edges(int [][]kernel, String filename) {
+    public static void MeanFilter(int kernel[][], String filename) {
 
-        // read or load image
         // read or load image
         BufferedImage img = null;
 
@@ -97,29 +85,30 @@ public class Main {
         int width = img.getWidth();
         int height = img.getHeight();
 
+
         BufferedImage grayImg = getGrayScaleImg(img);  // call to get the grayscale image
-        BufferedImage outputImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        BufferedImage sobelImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
         int filter = 0;
-        // convolution process
+        // process wherein to apply mean filter
         for (int x = 1; x <= width - 2; x++) {
             for (int y = 1; y <= height - 2; y++) {
                 int sum = 0;
                 for (int i = 0, a = -1; i < kernel.length; i++, a++) {
-                    for (int j = 0, b = -1; j < kernel.length; j++, b++) {
+                    for (int j = 0, b = -1; j < kernel[0].length; j++, b++) {
                         sum += ((grayImg.getRGB(x + a, y + b) & 255) * kernel[i][j]);
                     }
                 }
-
-                filter = truncate(sum);
+                // get the mean
+                filter = sum / getSum(kernel);
                 int pixel = (filter << 16) | (filter << 8) | filter;
-                outputImg.setRGB(x, y, pixel);
+                sobelImg.setRGB(x, y, pixel);
             }
         }
 
         // write image
         try {
-            WriteImage(outputImg, filename);
+            WriteImage(sobelImg, filename);
             System.out.println("Success!");
         } catch (IOException e) {
             System.out.println("Unable to process image!");
@@ -128,7 +117,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        Edges(SobelHoriKernel, "sobel_horizontal");
-        Edges(SobelVertKernel, "sobel_vertical");
+        MeanFilter(filter, "mean_filter");
+
     }
 }

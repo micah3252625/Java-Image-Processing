@@ -7,7 +7,7 @@ import java.io.IOException;
 
 
 public class Main {
-    public static final int[][] kernel = {
+    public static final int[][] filter = {
             { 1, 1, 1 },
             { 1, 1, 1 },
             { 1, 1, 1 }
@@ -95,8 +95,8 @@ public class Main {
             for (int y = 1; y <= height - 2; y++) {
                 int sum = 0;
                 for (int i = 0, a = -1; i < kernel.length; i++, a++) {
-                    for (int j = 0, b = -1; j < kernel.length; j++, b++) {
-                        sum += ((grayImg.getRGB(x + b, y + a) & 255) * kernel[i][j]);
+                    for (int j = 0, b = -1; j < kernel[0].length; j++, b++) {
+                        sum += ((grayImg.getRGB(x + a, y + b) & 255) * kernel[i][j]);
                     }
                 }
                 // get the mean

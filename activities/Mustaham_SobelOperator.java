@@ -7,25 +7,41 @@ import java.io.IOException;
 
 
 public class Main {
-    public static final int[][] VerticalKernel = {
+    // Kernels of different kind of operators
+    public static final int[][] SobelHoriKernel = {
             { -1, 0, 1 },
             { -2, 0, 2 },
             { -1, 0, 1 }
     };
-    public static final int[][] HorizontalKernel = {
+    public static final int[][] SobelVertKernel = {
             { -1, -2, -1 },
             {  0,  0,  0 },
             {  1,  2,  1 }
+    };
+    public static final int[][] LaplacianKernel = {
+            { 0,  1,  0 },
+            { 1, -4,  1 },
+            { 0,  1,  0 }
+    };
+    public static final int[][] PrewittVertKernel = {
+            { -1, -1, -1 },
+            {  1,  1,  1 },
+            {  0,  0,  0 }
+    };
+    public static final int[][] PrewittHoriKernel = {
+            { -1, 0, 1 },
+            { -1, 0, 1 },
+            { -1, 0, 1 },
     };
     public static File newFile(String filename) {
         return (new File(filename));
     }
     public static BufferedImage ReadImage() throws IOException {
-        File file = newFile("lenna.png");
+        File file = newFile("sourceImg/lenna.png");
         return (ImageIO.read(file));
     }
     public static boolean WriteImage(BufferedImage img, String id) throws IOException {
-        File file = newFile("output_" + id + ".png");
+        File file = newFile("outputImg/output_" + id + ".png");
         return (ImageIO.write(img, "png", file));
     }
     public static int getRed(int pixel) {
@@ -65,7 +81,7 @@ public class Main {
         }
         return grayImg; // return grayscale image
     }
-    public static void EdgesSobel(int kernel[][], String filename) {
+    public static void Edges(int [][]kernel, String filename) {
 
         // read or load image
         BufferedImage img = null;
@@ -80,30 +96,29 @@ public class Main {
         int width = img.getWidth();
         int height = img.getHeight();
 
-
         BufferedImage grayImg = getGrayScaleImg(img);  // call to get the grayscale image
-        BufferedImage sobelImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        BufferedImage outputImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
         int filter = 0;
-        // process wherein to apply mean filter
+        // convolution process
         for (int x = 1; x <= width - 2; x++) {
             for (int y = 1; y <= height - 2; y++) {
                 int sum = 0;
                 for (int i = 0, a = -1; i < kernel.length; i++, a++) {
                     for (int j = 0, b = -1; j < kernel.length; j++, b++) {
-                        sum += ((grayImg.getRGB(x + b, y + a) & 255) * kernel[i][j]);
+                        sum += ((grayImg.getRGB(x + a, y + b) & 255) * kernel[i][j]);
                     }
                 }
-                // get the mean
+
                 filter = truncate(sum);
                 int pixel = (filter << 16) | (filter << 8) | filter;
-                sobelImg.setRGB(x, y, pixel);
+                outputImg.setRGB(x, y, pixel);
             }
         }
 
         // write image
         try {
-            WriteImage(sobelImg, filename);
+            WriteImage(outputImg, filename);
             System.out.println("Success!");
         } catch (IOException e) {
             System.out.println("Unable to process image!");
@@ -112,7 +127,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        EdgesSobel(VerticalKernel, "sobel_vertical");
-        EdgesSobel(HorizontalKernel, "sobel_horizontal");
+        Edges(SobelHoriKernel, "sobel_horizontal");
+        Edges(SobelVertKernel, "sobel_vertical");
     }
 }
