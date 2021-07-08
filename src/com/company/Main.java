@@ -101,14 +101,21 @@ public class Main {
                 for (int i = 0; i < neighborhood.length; i++)
                     sigma += neighborhood[i];
                 // formula
-                shrunkImg.setRGB(x, y, (sigma > 0 ? setPixel(0) : a0 == 0 ? setPixel(255) : setPixel(0)));
+                int pixel = 0;
+                if (sigma == 0)
+                    pixel = setPixel(255);
+                else if (sigma == 8)
+                    pixel = setPixel(0);
+                else
+                    pixel = (a0 == 0 ? setPixel(255) : setPixel(0));
+                shrunkImg.setRGB(x, y, pixel);
             }
         }
 
         // write image
         try {
             WriteImage(binaryImg, "threshold_102");
-            WriteImage(shrunkImg, "expanded");
+            WriteImage(shrunkImg, "saltpepper");
             System.out.println("Success!");
         } catch (IOException e) {
             System.out.println("Unable to process image!");
