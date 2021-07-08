@@ -1,7 +1,6 @@
 package com.company;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -13,8 +12,8 @@ public class Main {
     public static File newFile(String filename) {
         return (new File(filename));
     }
-    public static BufferedImage ReadImage() throws IOException {
-        File file = newFile("sourceImg/coin.jpg");
+    public static BufferedImage ReadImage(String imageFile) throws IOException {
+        File file = newFile("sourceImg/" + imageFile);
         return (ImageIO.read(file));
     }
     public static boolean WriteImage(BufferedImage img, String id) throws IOException {
@@ -52,13 +51,13 @@ public class Main {
         }
         return grayImg; // return grayscale image
     }
-
-    public static void Expand(final int T) {
+    public static void SaltPepperRemoval(final int T, String filename, String nameExtension) {
 
         // read or load image
         BufferedImage img = null;
+
         try {
-            img = ReadImage();
+            img = ReadImage(filename);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -114,8 +113,8 @@ public class Main {
 
         // write image
         try {
-            WriteImage(binaryImg, "threshold_102");
-            WriteImage(shrunkImg, "saltpepper");
+            WriteImage(binaryImg, "saltnpepper_binary_128");
+            WriteImage(shrunkImg, nameExtension);
             System.out.println("Success!");
         } catch (IOException e) {
             System.out.println("Unable to process image!");
@@ -124,6 +123,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        Expand(102);
+        SaltPepperRemoval(102, "coin.jpg", "coin_saltnpepper");
+        SaltPepperRemoval(128, "saltnpepper.jpg", "saltnpepper_clean_128");
     }
 }
