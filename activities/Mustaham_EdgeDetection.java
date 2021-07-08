@@ -53,7 +53,7 @@ public class Main {
         return grayImg; // return grayscale image
     }
 
-    public static void Expand(final int T) {
+    public static void EdgeDetection(final int T) {
 
         // read or load image
         BufferedImage img = null;
@@ -117,6 +117,6 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        Expand(102);
+        EdgeDetection(102);
     }
 }
