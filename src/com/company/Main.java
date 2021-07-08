@@ -53,24 +53,28 @@ public class Main {
         return grayImg; // return grayscale image
     }
 
-    public static void Shrink(final int T) {
+    public static void Expand(final int T) {
 
         // read or load image
         BufferedImage img = null;
-
         try {
             img = ReadImage();
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // get and set the grayscale image
         BufferedImage grayImg = getGrayScaleImg(img);
+
         // get image dimension
         int width = img.getWidth();
         int height = img.getHeight();
+
         // conversion of grayscale image to binary image
         BufferedImage binaryImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         int [][]Binary = new int[width][height];
 
+        // process threshold
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 Binary[x][y] = (grayImg.getRGB(x, y) & 255) > T ? 0 : 1;
@@ -79,6 +83,7 @@ public class Main {
         }
 
         BufferedImage shrunkImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        // 8 path-neighbors
         int []neighborhood = new int[8];
 
         for (int x = 1; x < width - 1; x++) {
@@ -93,20 +98,17 @@ public class Main {
                 neighborhood[6] = (binaryImg.getRGB(x - 1, y + 1) & 255) == 0 ? 1 : 0;
                 neighborhood[7] = (binaryImg.getRGB(x - 1, y - 1) & 255) == 0 ? 1 : 0;
                 int sigma = 0;
-                for (int i = 0; i < neighborhood.length; i++) {
+                for (int i = 0; i < neighborhood.length; i++)
                     sigma += neighborhood[i];
-                }
-                shrunkImg.setRGB(x, y, (sigma < 8 ? setPixel(255) : a0 == 0 ? setPixel(255) : setPixel(0)));
+                // formula
+                shrunkImg.setRGB(x, y, (sigma > 0 ? setPixel(0) : a0 == 0 ? setPixel(255) : setPixel(0)));
             }
         }
-
-
-
 
         // write image
         try {
             WriteImage(binaryImg, "threshold_102");
-            WriteImage(shrunkImg, "shrunk");
+            WriteImage(shrunkImg, "expanded");
             System.out.println("Success!");
         } catch (IOException e) {
             System.out.println("Unable to process image!");
@@ -115,6 +117,6 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        Shrink(102);
+        Expand(102);
     }
 }
