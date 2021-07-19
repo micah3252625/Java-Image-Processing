@@ -1,19 +1,22 @@
 package com.company;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.*;
+import java.util.List;
 
 
 public class Main {
 
-
+    private static int[][] labeledBinaryImage;
     public static File newFile(String filename) {
         return (new File(filename));
     }
-    public static BufferedImage ReadImage(String imageFile) throws IOException {
-        File file = newFile("sourceImg/" + imageFile);
+    public static BufferedImage ReadImage() throws IOException {
+        File file = newFile("sourceImg/lightsabers.jpg");
         return (ImageIO.read(file));
     }
     public static boolean WriteImage(BufferedImage img, String id) throws IOException {
@@ -32,7 +35,7 @@ public class Main {
         return pixel & 255;
     }
     public static int setPixel(int val) { return ((val << 16) | (val << 8) | val); }
-    public static BufferedImage getGrayScaleImg(BufferedImage img) { // method that gets that process the grayscale image
+    public static BufferedImage getGrayScaleImg(BufferedImage img) {
 
         // initialize new Buffered Image
         BufferedImage grayImg = new BufferedImage(img.getWidth(), img.getHeight(), BufferedImage.TYPE_INT_RGB);
@@ -51,24 +54,13 @@ public class Main {
         }
         return grayImg; // return grayscale image
     }
-    public static void SaltPepperRemoval(final int T, String filename, String nameExtension) {
-
-        // read or load image
-        BufferedImage img = null;
-
-        try {
-            img = ReadImage(filename);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+    public static int[][] getBinaryImg(BufferedImage img, int T) {
         // get and set the grayscale image
         BufferedImage grayImg = getGrayScaleImg(img);
 
         // get image dimension
         int width = img.getWidth();
         int height = img.getHeight();
-
         // conversion of grayscale image to binary image
         BufferedImage binaryImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         int [][]Binary = new int[width][height];
@@ -80,50 +72,126 @@ public class Main {
                 binaryImg.setRGB(x, y, (Binary[x][y] == 0 ? setPixel(255) : setPixel(0)));
             }
         }
+        return Binary;
+    }
+    public static ArrayList<Integer> prior_neighbors(int[][] labels, int x, int y) {
+        ArrayList<Integer> neighbors = new ArrayList<Integer>();
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (x + i < 0 || y + j < 0 || x + i > labels.length - 1 || y + j > labels[0].length - 1)
+                    continue;
+                else {
+                    if (x + i == 0 && x + j == 0)
+                        continue;
+                    if (labels[x + i][y + j] != 0)
+                        neighbors.add(labels[x + i][y + j]);
+                }
+            }
+        }
+        return neighbors;
+    }
+    public static <T> ArrayList<T> union(ArrayList<T> list1, ArrayList<T> list2) {
+        Set<T> set = new HashSet<T>();
 
-        BufferedImage shrunkImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        // 8 path-neighbors
-        int []neighborhood = new int[8];
+        set.addAll(list1);
+        set.addAll(list2);
 
-        for (int x = 1; x < width - 1; x++) {
-            for (int y = 1; y < height - 1; y++) {
-                int a0 = (binaryImg.getRGB(x, y) & 255) == 0 ? 1 : 0;
-                neighborhood[0] = (binaryImg.getRGB(x + 1, y) & 255) == 0 ? 1 : 0;
-                neighborhood[1] = (binaryImg.getRGB(x - 1, y) & 255) == 0 ? 1 : 0;
-                neighborhood[2] = (binaryImg.getRGB(x, y + 1) & 255) == 0 ? 1 : 0;
-                neighborhood[3] = (binaryImg.getRGB(x, y - 1) & 255) == 0 ? 1 : 0;
-                neighborhood[4] = (binaryImg.getRGB(x + 1, y + 1) & 255) == 0 ? 1 : 0;
-                neighborhood[5] = (binaryImg.getRGB(x + 1, y - 1) & 255) == 0 ? 1 : 0;
-                neighborhood[6] = (binaryImg.getRGB(x - 1, y + 1) & 255) == 0 ? 1 : 0;
-                neighborhood[7] = (binaryImg.getRGB(x - 1, y - 1) & 255) == 0 ? 1 : 0;
-                int sigma = 0;
-                for (int i = 0; i < neighborhood.length; i++)
-                    sigma += neighborhood[i];
-                // formula
-                int pixel = 0;
-                if (sigma == 0)
-                    pixel = setPixel(255);
-                else if (sigma == 8)
-                    pixel = setPixel(0);
-                else
-                    pixel = (a0 == 0 ? setPixel(255) : setPixel(0));
-                shrunkImg.setRGB(x, y, pixel);
+        return new ArrayList<T>(set);
+    }
+    public static void ClassComponent(int[][] binaryImg, int width, int height) {
+        BufferedImage output = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+        ArrayList<ArrayList<Integer>> linked = new ArrayList<ArrayList<Integer>>();
+        int[][] labels= new int[binaryImg.length][binaryImg[0].length];
+        int nextLabel = 0;
+
+        // FIRST PASS
+        // initialize labels to all 0s
+        for (int i = 0; i < binaryImg.length; i++) {
+            for (int j = 0; j < binaryImg.length; j++) {
+                labels[i][j] = 0;
+            }
+        }
+
+        for (int i = 0; i < binaryImg.length; i++) {
+            for (int j = 0; j < binaryImg.length; j++) {
+                if (binaryImg[i][j] != 0) {
+                    ArrayList<Integer> neighbors = prior_neighbors(labels, i, j);
+                    if (neighbors.size() == 0) {
+                        ArrayList<Integer> temp = new ArrayList<Integer>();
+                        temp.add(nextLabel);
+                        linked.add(nextLabel, temp);
+                        labels[i][j] = nextLabel;
+                        nextLabel++;
+                    }
+                    else {
+                        labels[i][j] = width * height;
+                        for (int n : neighbors) {
+                            if (n < labels[i][j])
+                                labels[i][j] = n;
+                        }
+                        for (int n : neighbors) {
+                            linked.set(n, union(linked.get(n), neighbors));
+                        }
+                    }
+                }
+            }
+        }
+
+        // SECOND PASS
+        for (int i = 0; i < binaryImg.length; i++) {
+            for (int j = 0; j < binaryImg[0].length; j++) {
+                ArrayList<Integer> EquivalenceLabels = linked.get(labels[i][j]);
+                labels[i][j] = width * height;
+                for (int label : EquivalenceLabels) {
+                    if (label < labels[i][j])
+                        labels[i][j] = label;
+                }
+
+            }
+        }
+
+        labeledBinaryImage = labels;
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int pixel = labeledBinaryImage[x][y];
+                int R = getRed(pixel);
+                int G = getGreen(pixel);
+                int B = getBlue(pixel);
+
+                int grayIntensity = (R + G + B) / 3;
+
+                output.setRGB(x, y, (grayIntensity > 100 ? 0 : 1));
             }
         }
 
         // write image
         try {
-            WriteImage(binaryImg, "saltnpepper_binary_128");
-            WriteImage(shrunkImg, nameExtension);
+            WriteImage(output, "lightsabers2ndPass");
             System.out.println("Success!");
         } catch (IOException e) {
             System.out.println("Unable to process image!");
             e.printStackTrace();
         }
+
     }
 
     public static void main(String[] args) {
-        SaltPepperRemoval(102, "coin.jpg", "coin_saltnpepper");
-        SaltPepperRemoval(128, "saltnpepper.jpg", "saltnpepper_clean_128");
+        // read or load image
+        BufferedImage img = null;
+        try {
+            img = ReadImage();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // get image dimension
+        int width = img.getWidth();
+        int height = img.getHeight();
+
+        int[][] binaryImage = getBinaryImg(img, 200);
+
+        ClassComponent(binaryImage, width, height);
+
     }
 }
