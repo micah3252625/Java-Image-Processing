@@ -99,7 +99,7 @@ public class Main {
         return new ArrayList<T>(set);
     }
     public static void ClassComponent(int[][] binaryImg, int width, int height) {
-        BufferedImage output = new BufferedImage(width, height, BufferedImage.TYPE_3BYTE_BGR);
+
         ArrayList<ArrayList<Integer>> linked = new ArrayList<ArrayList<Integer>>();
         int[][] labels= new int[binaryImg.length][binaryImg[0].length];
         int nextLabel = 0;
@@ -113,7 +113,7 @@ public class Main {
         }
 
         for (int i = 0; i < binaryImg.length; i++) {
-            for (int j = 0; j < binaryImg.length; j++) {
+            for (int j = 0; j < binaryImg[0].length; j++) {
                 if (binaryImg[i][j] != 0) {
                     ArrayList<Integer> neighbors = prior_neighbors(labels, i, j);
                     if (neighbors.size() == 0) {
@@ -150,18 +150,52 @@ public class Main {
             }
         }
 
-        labeledBinaryImage = labels;
+        /*
 
+
+        int[][] allLabels = new int[width][height];
+        for (int i = 0; i < binaryImg.length; i++) {
+            for (int j = 0; j < binaryImg[0].length; j++) {
+                if (labels[i][j] != 0){
+                    allLabels[i][j] = labels[i][j];
+                    System.out.println(allLabels[i][j]);
+                }
+            }
+        }
+
+        for (int i = 0; i < binaryImg.length; i++) {
+            for (int j = 0; j < binaryImg[0].length; j++) {
+                if (labels[i][j] != 0){
+                    count++;
+                }
+            }
+        }
+
+        int colors[] = new int[count];
+        Random random = new Random(0);
+        for (int i=0; i<count; i++) {
+            colors[i] = 0xFF000000 | random.nextInt();
+        }
+    */
+        int count = 0;
+
+        for (int i = 0; i < binaryImg.length; i++) {
+            for (int j = 0; j < binaryImg[0].length; j++) {
+                    count++;
+            }
+        }
+        int colors[] = new int[count];
+        Random random = new Random(0);
+        for (int i = 0; i < count; i++) {
+            colors[i] = 0xFF000000 | random.nextInt();
+        }
+
+        labeledBinaryImage = labels;
+        BufferedImage output = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 int pixel = labeledBinaryImage[x][y];
-                int R = getRed(pixel);
-                int G = getGreen(pixel);
-                int B = getBlue(pixel);
-
-                int grayIntensity = (R + G + B) / 3;
-
-                output.setRGB(x, y, (grayIntensity > 100 ? 0 : 1));
+                output.setRGB(x, y, colors[pixel]);
             }
         }
 
