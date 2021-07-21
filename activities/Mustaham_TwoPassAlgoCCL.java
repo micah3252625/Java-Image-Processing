@@ -211,13 +211,6 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        // read or load image
-        BufferedImage img = null;
-        try {
-            img = ReadImage();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         // get image dimension
         int width = img.getWidth();
